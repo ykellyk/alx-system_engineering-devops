@@ -1,10 +1,7 @@
-# 1-install_a_package.pp
-
-package { 'python3-pip':
-  ensure => installed,
-}
-
-exec { 'install_flask':
-  command => '/usr/bin/pip3 install Flask==3.0.3',
-  unless  => '/usr/bin/pip3 show flask | grep -q "Version: 3.0.3"',
+#!/usr/bin/pup
+# Install an especific version of flask (2.1.0)
+package { 'flask':
+  ensure   => '2.1.0',
+  provider => 'pip3',
+  install_options => ['--force-reinstall'],
 }
