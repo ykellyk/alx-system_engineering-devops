@@ -1,30 +1,16 @@
 #!/usr/bin/env bash
-# #Configure your domain zone so that the subdomain www and display information about subdomain
-function domainInfo() {
-    SUBDOMAINS=("www" "lb-01" "web-01" "web-02")
-    if [ $# -eq 1 ]
-    then
-        for subdomain in "${SUBDOMAINS[@]}"; do
-            RECORDTYPE="$(dig $subdomain.$1 | grep -A1 'ANSWER SECTION:' | tr '\t' '\n' | tail -2 | tr '\n' ' ' | awk '{print $1}')"
-            DESTINATION="$(dig +short $subdomain.$1)"
-            echo "The subdomain $subdomain is a $RECORDTYPE record and points to $DESTINATION"
-        done
-    elif [ $# -eq 2 ]
-    then
-        RECORDTYPE="$(dig $2.$1 | grep -A1 'ANSWER SECTION:' | tr '\t' '\n' | tail -2 | tr '\n' ' ' | awk '{print $1}')"
-        DESTINATION="$(dig +short $2.$1)"
-        echo "The subdomain $2 is a $RECORDTYPE record and points to $DESTINATION"
-    else
-        echo "Usage: ./0-world_wide_web [DOMAIN] [optional SUBDOMAIN]"
-    fi
+# display domain information 
+web_information () {
+	ans_sec=$(dig "$2"."$1" | awk '/^;; ANSWER SECTION:/{flag=1; next} flag && NF {print $0; exit}')
+	read -r ip record <<< "$(echo "$ans_sec" | awk '{print $(NF), $(NF - 1); exit}')"
+	echo "The subdomain $2 is a $record record and points to $ip"
 }
 
-if [ $# -eq 1 ]
-then
-    domainInfo $1
-elif [ $# -eq 2 ]
-then
-    domainInfo $1 $2
+if [ -z "$2" ]; then
+	web_information "$1" www
+	web_information "$1" lb-01
+	web_information "$1" web-01
+	web_information "$1" web-02
 else
-    domainInfo
+	web_information "$1" "$2"
 fi
